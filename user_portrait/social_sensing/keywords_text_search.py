@@ -42,7 +42,7 @@ def get_sensitive_weibo_detail(ts, social_sensors, sensitive_words_list, message
                                 }
                             }},
                             {"term": {"message_type": message_type}},
-                            #{"terms":{"keywords_string": sensitive_words_list}}
+                            {"terms":{"keywords_string": sensitive_words_list}}
                         ]
                     }
                 }
@@ -54,15 +54,6 @@ def get_sensitive_weibo_detail(ts, social_sensors, sensitive_words_list, message
 
     if social_sensors:
         query_body['query']['filtered']['filter']['bool']['must'].append({"terms": {"uid": social_sensors}})
-
-    if sensitive_words_list:
-        full_text_dict = {"bool":{"should":[]}}
-        query_body["query"]["filtered"]["query"] = full_text_dict
-        temp_list = []
-        for word in sensitive_words:
-            small_sentence = {"wildcard": {"text": {"wildcard": "*"+word+"*"}}}
-            temp_list.append(small_sentence)
-        query_body["query"]["filtered"]["query"]["bool"]["should"].extend(temp_list)
 
     datetime = ts2datetime(ts)
     datetime_1 = ts2datetime(ts-time_interval)
@@ -124,7 +115,7 @@ def get_origin_weibo_detail(ts, social_sensors, keywords_list, size=100, message
                                     "lt": ts
                                 }
                             }},
-                            #{"terms":{"keywords_string": keywords_list}},
+                            {"terms":{"keywords_string": keywords_list}},
                             {"term": {"message_type": message_type}}
                         ]
                     }
@@ -137,15 +128,6 @@ def get_origin_weibo_detail(ts, social_sensors, keywords_list, size=100, message
 
     if social_sensors:
         query_body["query"]["filtered"]["filter"]["bool"]["must"].append({"terms":{"uid": social_sensors}})
-
-    if keywords_list:
-        full_text_dict = {"bool":{"should":[]}}
-        query_body["query"]["filtered"]["query"] = full_text_dict
-        temp_list = []
-        for word in sensitive_words:
-            small_sentence = {"wildcard": {"text": {"wildcard": "*"+word+"*"}}}
-            temp_list.append(small_sentence)
-        query_body["query"]["filtered"]["query"]["bool"]["should"].extend(temp_list)
 
     datetime = ts2datetime(ts)
     datetime_1 = ts2datetime(ts-time_interval)
@@ -209,8 +191,8 @@ def query_mid_list(ts, keywords_list, time_segment, social_sensors=[]):
                                     "gte": ts - time_segment,
                                     "lt": ts
                                  }
-                            }}
-                            #{"terms": {"keywords_string": keywords_list}}
+                            }},
+                            {"terms": {"keywords_string": keywords_list}}
                         ]
                     }
                 }
@@ -221,15 +203,6 @@ def query_mid_list(ts, keywords_list, time_segment, social_sensors=[]):
 
     if social_sensors:
         query_body['query']['filtered']['filter']['bool']['must'].append({"terms": {"uid": social_sensors}})
-
-    if keywords_list:
-        full_text_dict = {"bool":{"should":[]}}
-        query_body["query"]["filtered"]["query"] = full_text_dict
-        temp_list = []
-        for word in sensitive_words:
-            small_sentence = {"wildcard": {"text": {"wildcard": "*"+word+"*"}}}
-            temp_list.append(small_sentence)
-        query_body["query"]["filtered"]["query"]["bool"]["should"].extend(temp_list)
 
     datetime = ts2datetime(ts)
     index_name = flow_text_index_name_pre + datetime
@@ -454,7 +427,7 @@ def query_hot_mid(ts, keywords_list, text_type,size=100):
                                     "lt": ts
                                 }
                             }},
-                            #{"terms": {"keywords_string": keywords_list}},
+                            {"terms": {"keywords_string": keywords_list}},
                             {"term": {"message_type": "0"}}
                         ]
                     }
@@ -467,15 +440,6 @@ def query_hot_mid(ts, keywords_list, text_type,size=100):
             }
         }
     }
-
-    if keywords_list:
-        full_text_dict = {"bool":{"should": []}}
-        query_body['query']['filtered']['query'] = full_text_dict
-        temp_list = []
-        for word in keywords_list:
-            small_sentence = {"wildcard": {"text": {"wildcard": "*"+word+"*"}}}
-            temp_list.append(small_sentence)
-        query_body["query"]["filtered"]["query"]["bool"]["should"].extend(temp_list)
 
     datetime = ts2datetime(ts)
     datetime_1 = ts2datetime(ts-time_interval)
@@ -533,13 +497,9 @@ def count_hot_uid(uid, start_time, stop_time, keywords_list):
     }
 
     if keywords_list:
-        full_text_dict = {"bool":{"should": []}}
-        query_body['query']['filtered']['query'] = full_text_dict
-        temp_list = []
-        for word in keywords_list:
-            small_sentence = {"wildcard": {"text": {"wildcard": "*"+word+"*"}}}
-            temp_list.append(small_sentence)
-        query_body["query"]["filtered"]["query"]["bool"]["should"].extend(temp_list)
+        query_body['query']['filtered']['filter']['bool']['must'].append({"terms": {"keywords_string": keywords_list}})
+        #for word in keywords_list:
+            #query_body['query']['filtered']['query']['bool']['should'].append({'wildcard':{"text": "*"+word+"*"}})
 
     count = 0
     datetime = ts2datetime(float(stop_time))
@@ -568,6 +528,75 @@ def count_hot_uid(uid, start_time, stop_time, keywords_list):
                 break
 
     return count
+
+
+
+def aggregation_hot_keywords(start_time, stop_time, keywords_list):
+    start_time = int(start_time)
+    stop_time = int(stop_time)
+    query_body = {
+        "query":{
+            "filtered":{
+                "filter":{
+                    "bool":{
+                        "must":[
+                            {"terms": {"keywords_string": keywords_list}},
+                            {"range":{
+                                "timestamp":{
+                                    "gte":start_time,
+                                    "lt": stop_time
+                                }
+                            }}
+                        ]
+                    }
+                }
+            }
+        },
+        "aggs":{
+            "all_keywords":{
+                "terms": {"field": "keywords_string", "size": PRE_AGGREGATION_NUMBER}
+            }
+        }
+    }
+
+
+    keywords_dict = dict()
+    datetime = ts2datetime(float(stop_time))
+    index_name = flow_text_index_name_pre + datetime
+    exist_es = es_text.indices.exists(index_name)
+    if exist_es:
+        search_results = es_text.search(index=index_name, doc_type=flow_text_index_type, body=query_body)["aggregations"]['all_keywords']['buckets']
+        if search_results:
+            for item in search_results:
+                keywords_dict[item['key']] = item['doc_count']
+
+    datetime_1 = ts2datetime(float(start_time))
+    if datetime_1 == datetime:
+        pass
+    else:
+        ts = float(stop_time)
+        while 1:
+            keywords_dict_1 = dict()
+            ts = ts-day_time
+            datetime = ts2datetime(ts)
+            index_name = flow_text_index_name_pre + datetime
+            exist_es = es_text.indices.exists(index_name)
+            if exist_es:
+                search_results_1 = es_text.search(index=index_name, doc_type=flow_text_index_type, body=query_body)["aggregations"]['all_keywords']['buckets']
+                if search_results_1:
+                    print search_results_1
+                    for item in search_results_1:
+                        keywords_dict_1[item['key']] = item['doc_count']
+                for iter_key in keywords_dict_1.keys():
+                    if keywords_dict.has_key(iter_key):
+                        keywords_dict[iter_key] += keywords_dict_1[iter_key]
+                    else:
+                        keywords_dict[iter_key] = keywords_dict_1[iter_key]
+            if datetime_1 == datetime:
+                break
+    print keywords_dict
+    return_dict = sorted(keywords_dict.items(), key=lambda x:x[1], reverse=True)[:AGGRAGATION_KEYWORDS_NUMBER]
+    return return_dict
 
 
 
