@@ -5,7 +5,8 @@ import json
 import math
 import time
 from get_task_detail import get_task_detail_2
-from keywords_text_serach import get_origin_weibo_detail, get_retweet_weibo_detail, get_positive_weibo_detail, get_sensitive_weibo_detail
+from keywords_text_search import get_origin_weibo_detail, get_retweet_weibo_detail, get_positive_weibo_detail, get_sensitive_weibo_detail
+#from full_text_serach import get_origin_weibo_detail, get_retweet_weibo_detail, get_positive_weibo_detail, get_sensitive_weibo_detail
 from user_portrait.global_utils import es_user_profile as es_profile
 from user_portrait.global_utils import es_user_portrait as es
 from user_portrait.global_utils import es_flow_text as es_text

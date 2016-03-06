@@ -5,7 +5,8 @@ import sys
 import json
 import math
 import time
-from full_text_serach import count_hot_uid, query_hot_mid
+from keywords_text_search import count_hot_uid, query_hot_mid
+#from full_text_serach import count_hot_uid, query_hot_mid
 from user_portrait.time_utils import ts2date
 from user_portrait.global_utils import es_user_profile as es_profile
 from user_portrait.global_utils import es_user_portrait as es
@@ -223,9 +224,9 @@ def get_task_detail_2(task_name, keywords, ts):
                 temp.append(item['fields']['topic_string'][0].split('&'))
                 hot_count = count_hot_uid(item['fields']['uid'][0], start_time, stop_time, keywords_list)
                 temp.append(hot_count)
-                temp.append(math.log(item['fields']['importance'][0]/float(top_importance)*9+1, 10))
-                temp.append(math.log(item['fields']['influence'][0]/float(top_influence)*9+1, 10))
-                temp.append(math.log(item['fields']['activeness'][0]/float(top_activeness)*9+1, 10))
+                temp.append(math.log(item['fields']['importance'][0]/float(top_importance)*9+1, 10)*100)
+                temp.append(math.log(item['fields']['influence'][0]/float(top_influence)*9+1, 10)*100)
+                temp.append(math.log(item['fields']['activeness'][0]/float(top_activeness)*9+1, 10)*100)
                 user_detail_info.append(temp)
                 #print temp
     # 排序

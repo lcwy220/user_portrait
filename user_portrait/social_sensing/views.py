@@ -16,7 +16,7 @@ from user_portrait.parameter import DOC_TYPE_MANAGE_SOCIAL_SENSING as task_doc_t
 from user_portrait.parameter import DETAIL_SOCIAL_SENSING as index_sensing_task
 from user_portrait.parameter import finish_signal, unfinish_signal, SOCIAL_SENSOR_INFO
 from utils import get_warning_detail, get_text_detail
-from full_text_serach import aggregation_hot_keywords
+#from full_text_serach import aggregation_hot_keywords
 from delete_es import delete_es
 
 mod = Blueprint('social_sensing', __name__, url_prefix='/social_sensing')
@@ -381,6 +381,7 @@ def ajax_get_warning_detail():
 
     return json.dumps(results)
 
+"""
 # 聚合关键词
 @mod.route('/get_keywords_list/')
 def ajax_get_keywords_list():
@@ -395,7 +396,7 @@ def ajax_get_keywords_list():
     results = aggregation_hot_keywords(start_time, ts, keywords_list)
 
     return json.dumps(results)
-
+"""
 
 # 返回某个时间段特定的文本，按照热度排序
 @mod.route('/get_text_detail/')
