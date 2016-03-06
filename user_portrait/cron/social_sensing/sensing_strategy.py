@@ -269,7 +269,7 @@ def sensors_keywords_detection(task_detail):
             word_label, evaluation_results = kmeans(feature_words, text_list) #聚类
             inputs = text_classify(text_list, word_label, feature_words)
             clustering_topic = cluster_evaluation(inputs)
-            sorted_dict = sorted(clustering_topic.items(), key=lambda x:x[1], reverse=True)[0:5]
+            sorted_dict = sorted(clustering_topic.items(), key=lambda x:x[1], reverse=True)
             topic_list = []
             if sorted_dict:
                 for item in sorted_dict:
@@ -294,7 +294,7 @@ def sensors_keywords_detection(task_detail):
     results['burst_reason'] = tmp_burst_reason
     results['timestamp'] = ts
     if tmp_burst_reason:
-        results["clustering_topic"] = json.dumps(topic_list[:5])
+        results["clustering_topic"] = json.dumps(topic_list)
 
     # es存储当前时段的信息
     doctype = task_name

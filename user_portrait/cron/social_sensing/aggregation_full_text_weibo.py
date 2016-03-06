@@ -706,7 +706,7 @@ def specific_keywords_burst_dection(task_detail):
             clustering_topic = cluster_evaluation(inputs)
             print "========================================================================================"
             print "========================================================================================="
-            sorted_dict = sorted(clustering_topic.items(), key=lambda x:x[1], reverse=True)[0:5]
+            sorted_dict = sorted(clustering_topic.items(), key=lambda x:x[1], reverse=True)
             topic_list = []
             if sorted_dict:
                 for item in sorted_dict:
@@ -731,7 +731,7 @@ def specific_keywords_burst_dection(task_detail):
     results['burst_reason'] = tmp_burst_reason
     results['timestamp'] = ts
     if tmp_burst_reason:
-        results['clustering_topic'] = json.dumps(topic_list[:5])
+        results['clustering_topic'] = json.dumps(topic_list)
     # es存储当前时段的信息
     doctype = task_name
     es_user_portrait.index(index=index_sensing_task, doc_type=doctype, id=ts, body=results)
